@@ -1,0 +1,7 @@
+# Ignore Visual Studio files
+.vs/
+*.suo
+*.user
+*.vcxproj.user
+*.pdb
+*.vscode/
