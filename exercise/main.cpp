@@ -105,23 +105,6 @@ void printBoard(std::vector<std::vector<int>>& board, const ReturnValidity& vali
 	else std::cout << "SUCCESFULLY PLACED!!!!!!!!" << std::endl;
 }
 
-void printPermute(std::vector<int>& current, int target, int currentSum) {
-	if (current.size() == 5) {
-		for (const auto& ch : current)
-			std::cout << ch << " ";
-		std::cout << std::endl;
-		return;
-	}
-
-	for (int i = 0; i < 10; i++) {
-		if (currentSum + i > target) continue;
-		currentSum += i;
-		current.push_back(i);
-		printPermute(current, target, currentSum);
-		currentSum -= i;
-		current.pop_back();
-	}
-}
 
 
 std::pair<int, int> findFirstEmptyCell(const std::vector<std::vector<int>>& board) {
