@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <set>
+#include <stack>
 
 //this passes meta infromation or extra infomration for  our printBoard function(ex: where is invalid placement)
 struct ReturnValidity {
@@ -26,14 +28,14 @@ ReturnValidity isValidPlacement(std::vector<std::vector<int>>& board, int row, i
 
 	//checking row wise validity
 	for (int i = 0; i < 9; i++)
-		if (board[row][i] == value && i != col) {
+		if (board[row][i] == value && i != col && value != 0) {
 			invalidMessage += ("cannot place " + std::to_string(value) + " at " + "(" + std::to_string(row + 1) + ", " + std::to_string(col + 1) +
 				") because there is " + std::to_string(value) + " in same row " + std::to_string(row + 1) + " at column " + std::to_string(i + 1) + "\n\n");
 			return { false, row, i, row, col, value, invalidMessage};
 		}
 	//checking column wise validity
 	for (int i = 0; i < 9; i++)
-		if (board[i][col] == value && i != row) {
+		if (board[i][col] == value && i != row && value != 0) {
 			invalidMessage += ("cannot place " + std::to_string(value) + " at " + "(" + std::to_string(row + 1) + ", " + std::to_string(col + 1) + 
 				") because there is " + std::to_string(value) + " in same column " + std::to_string(col + 1) + " at row " + std::to_string(i + 1) + "\n\n");
 
@@ -47,7 +49,7 @@ ReturnValidity isValidPlacement(std::vector<std::vector<int>>& board, int row, i
 	int gridCol3X3 = col - col % 3;
 	for (int i = gridRow3X3; i < gridRow3X3 + 3; i++) {
 		for (int j = gridCol3X3; j < gridCol3X3 + 3; j++) {
-			if (board[i][j] == value && !(row == i && col == j)) {
+			if (board[i][j] == value && !(row == i && col == j) && value != 0) {
 				invalidMessage += ( "cannot place " + std::to_string(value) + " at " + "(" + std::to_string(row + 1) + ", " + std::to_string(col + 1) +
 					") because there is " + std::to_string(value) + " in same 3X3 gird at row " + std::to_string(i + 1) + " and at column " + std::to_string(j + 1) + "\n\n");
 				return {false, i, j, row, col, value, invalidMessage};
@@ -55,7 +57,6 @@ ReturnValidity isValidPlacement(std::vector<std::vector<int>>& board, int row, i
 		}
 
 	}
-	board[row][col] = value;
 	return { true, 0, 0, 0, 0, 0, "no message"};
 }
 
@@ -103,26 +104,71 @@ void printBoard(std::vector<std::vector<int>>& board, const ReturnValidity& vali
 		std::cout << validity.invalidMessage << std::endl;
 	else std::cout << "SUCCESFULLY PLACED!!!!!!!!" << std::endl;
 }
-int main() {
-	std::vector<std::vector<int>> board = {
-	{5, 3, 0, 0, 7, 0, 0, 0, 0},
-	{6, 0, 0, 1, 9, 5, 0, 0, 0},
-	{0, 9, 8, 0, 0, 0, 0, 6, 0},
-	{8, 0, 0, 0, 6, 0, 0, 0, 3},
-	{4, 0, 0, 8, 0, 3, 0, 0, 1},
-	{7, 0, 0, 0, 2, 0, 0, 0, 6},
-	{0, 6, 0, 0, 0, 0, 2, 8, 0},
-	{0, 0, 0, 4, 1, 9, 0, 0, 5},
-	{0, 0, 0, 0, 8, 0, 0, 7, 9}
-	};
 
-	int row, col, value;
-	printBoard(board, isValidPlacement(board, 0, 0, 5));
-	while (!checkSolved(board)) {
-		std::cout << "Enter row, column and value respectively: ";
-		std::cin >> row >> col >> value;
-		system("cls");
-		printBoard(board, isValidPlacement(board, row - 1, col - 1, value));
+void printPermute(std::vector<int>& current, int target, int currentSum) {
+	if (current.size() == 5) {
+		for (const auto& ch : current)
+			std::cout << ch << " ";
+		std::cout << std::endl;
+		return;
 	}
 
+	for (int i = 0; i < 10; i++) {
+		if (currentSum + i > target) continue;
+		currentSum += i;
+		current.push_back(i);
+		printPermute(current, target, currentSum);
+		currentSum -= i;
+		current.pop_back();
+	}
+}
+
+
+std::pair<int, int> findFirstEmptyCell(const std::vector<std::vector<int>>& board) {
+	int row;
+	int col;
+	for (row = 0; row < board.size(); row++) {
+		for (col = 0; col < board.size(); col++) {
+			if (board[row][col] == 0)
+				return { row, col };
+		}
+	}
+	return { -1, -1 };
+}
+bool solveSoduku(std::vector<std::vector<int>>& board, int& attempt) {
+	std::pair<int, int> pair = findFirstEmptyCell(board);
+	int row = pair.first;
+	int col = pair.second;
+	if (row == -1 && col == -1)
+		return true;
+	for (int i = 1; i < 10; i++) {
+		attempt++;
+		if (!isValidPlacement(board, row, col, i).valid) continue;
+		board[row][col] = i;
+		if (solveSoduku(board, attempt))
+			return true;
+		board[row][col] = 0;
+	}
+	return false;
+}
+
+
+int main() {
+	std::vector<std::vector<int>> board = {
+	{8, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 3, 6, 0, 0, 0, 0, 0},
+	{0, 7, 0, 0, 9, 0, 2, 0, 0},
+	{0, 5, 0, 0, 0, 7, 0, 0, 0},
+	{0, 0, 0, 0, 4, 5, 7, 0, 0},
+	{0, 0, 0, 1, 0, 0, 0, 3, 0},
+	{0, 0, 1, 0, 0, 0, 0, 6, 8},
+	{0, 0, 8, 5, 0, 0, 0, 1, 0},
+	{0, 9, 0, 0, 0, 0, 4, 0, 0}
+	};
+
+
+	int attempt = 0;
+	solveSoduku(board, attempt);
+	printBoard(board, isValidPlacement(board, 0, 0, 4));
+	std::cout << attempt;
 }
